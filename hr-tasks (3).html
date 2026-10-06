@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>متابعة التاسكات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F2A44; --ink-soft:#5B6478;
+  --bg:#F6F5F2; --card:#FFFFFF; --line:#E7E4DD;
+  --overdue:#C1443C; --overdue-bg:#FBEAE8;
+  --soon:#C08A2C; --soon-bg:#FBF3E4;
+  --ok:#2F7B5F; --ok-bg:#EAF4EF;
+  --archive:#8B8578; --archive-bg:#F0EEE9;
+  --accent:#3A4A78;
+  padding-top: env(safe-area-inset-top,0px);
+  padding-bottom: env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#ECE9E2; --ink-soft:#B4B0A6;
+    --bg:#181A20; --card:#20222A; --line:#31333D;
+    --overdue-bg:#3A2320; --soon-bg:#3A2E18; --ok-bg:#1C2E27; --archive-bg:#26272E;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#ECE9E2; --ink-soft:#B4B0A6;
+  --bg:#181A20; --card:#20222A; --line:#31333D;
+  --overdue-bg:#3A2320; --soon-bg:#3A2E18; --ok-bg:#1C2E27; --archive-bg:#26272E;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top: env(safe-area-inset-top,0px);}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Cairo',system-ui,sans-serif;
+  min-height:100%;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+header{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+  padding-top: env(safe-area-inset-top,0px);
+  flex-wrap:wrap; margin-bottom:22px;
+}
+h1{font-size:26px; font-weight:800; margin:0 0 4px;}
+.sub{color:var(--ink-soft); font-size:14px; margin:0;}
+.addbtn{
+  background:var(--accent); color:#fff; border:none; border-radius:10px;
+  padding:12px 20px; font-family:inherit; font-weight:700; font-size:15px;
+  cursor:pointer; white-space:nowrap;
+}
+.addbtn:active{opacity:.85}
+
+.stats{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px;}
+.stat{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; flex:1; min-width:120px;}
+.stat b{display:block; font-size:22px;}
+.stat span{color:var(--ink-soft); font-size:13px;}
+
+.filterbar{display:flex; align-items:flex-start; gap:10px; margin-bottom:18px; flex-wrap:wrap; flex-direction:column;}
+.filterbar label{font-size:13.5px; color:var(--ink-soft); font-weight:600;}
+.chips{display:flex; flex-wrap:wrap; gap:8px;}
+.chip{
+  padding:7px 14px; border-radius:20px; border:1px solid var(--line);
+  background:var(--card); color:var(--ink); font-family:inherit; font-size:13.5px;
+  cursor:pointer; user-select:none;
+}
+.chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+.chip.clearall{color:var(--overdue); border-color:var(--overdue);}
+
+.board{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+@media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.board{grid-template-columns:1fr}}
+.col{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; min-height:120px;}
+.col h2{font-size:15px; margin:0 0 12px; display:flex; align-items:center; gap:8px; font-weight:700;}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+.col.overdue .dot{background:var(--overdue)}
+.col.soon .dot{background:var(--soon)}
+.col.ok .dot{background:var(--ok)}
+.col.paused .dot{background:var(--archive)}
+.task.paused{background:var(--archive-bg); border-color:var(--line)}
+.task.paused .badge{background:var(--archive); color:#fff}
+.empty{color:var(--ink-soft); font-size:13px; padding:10px 2px;}
+
+.task{border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; position:relative;}
+.task.overdue{background:var(--overdue-bg); border-color:#e0b5b0}
+.task.soon{background:var(--soon-bg); border-color:#e3caa0}
+.task.ok{background:var(--ok-bg); border-color:#b9d9c8}
+.task.archived{background:var(--archive-bg)}
+.task-title{font-weight:700; font-size:15px; margin:0 0 4px;}
+.task-desc{font-size:13px; color:var(--ink-soft); margin:0 0 8px; line-height:1.5;}
+.task-meta{display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color:var(--ink-soft); gap:8px; flex-wrap:wrap;}
+.badge{padding:2px 9px; border-radius:20px; font-weight:700; font-size:11.5px;}
+.task.overdue .badge{background:var(--overdue); color:#fff}
+.task.soon .badge{background:var(--soon); color:#fff}
+.task.ok .badge{background:var(--ok); color:#fff}
+.task-actions{display:flex; gap:6px; margin-top:9px;}
+.task-actions button{
+  border:1px solid var(--line); background:transparent; color:var(--ink);
+  border-radius:8px; padding:6px 10px; font-family:inherit; font-size:12.5px; cursor:pointer;
+}
+.task-actions button.done{border-color:var(--ok); color:var(--ok);}
+.task-actions button.del{border-color:var(--overdue); color:var(--overdue);}
+
+.archive-toggle{margin-top:26px; text-align:center;}
+.archive-toggle button{
+  background:none; border:1px solid var(--line); color:var(--ink-soft);
+  border-radius:10px; padding:10px 18px; font-family:inherit; cursor:pointer; font-size:13.5px;
+}
+#archiveList{margin-top:14px; display:none; grid-template-columns:repeat(3,1fr); gap:12px;}
+@media(max-width:900px){#archiveList{grid-template-columns:1fr}}
+
+.modal-bg{
+  position:fixed; inset:0; background:rgba(20,20,25,.45); display:none;
+  align-items:center; justify-content:center; padding:16px; z-index:50;
+}
+.modal{
+  background:var(--card); border-radius:16px; padding:22px; width:100%; max-width:420px;
+  border:1px solid var(--line);
+}
+.modal h3{margin:0 0 14px; font-size:18px;}
+.field{margin-bottom:12px;}
+.field label{display:block; font-size:13px; color:var(--ink-soft); margin-bottom:5px; font-weight:600;}
+.field input, .field textarea{
+  width:100%; padding:10px 12px; border-radius:9px; border:1px solid var(--line);
+  background:var(--bg); color:var(--ink); font-family:inherit; font-size:14px;
+}
+.field textarea{resize:vertical; min-height:60px;}
+.modal-actions{display:flex; gap:8px; margin-top:16px;}
+.modal-actions button{
+  flex:1; padding:11px; border-radius:9px; border:none; font-family:inherit;
+  font-weight:700; cursor:pointer; font-size:14px;
+}
+.save{background:var(--accent); color:#fff;}
+.cancel{background:transparent; border:1px solid var(--line) !important; color:var(--ink);}
+
+.note{
+  background:var(--card); border:1px dashed var(--line); border-radius:12px;
+  padding:14px 16px; margin-top:26px; font-size:13px; color:var(--ink-soft); line-height:1.7;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>متابعة التاسكات</h1>
+      <p class="sub">تاسكات الاجتماع الأسبوعي — الديدلاينات والتنبيهات في مكان واحد</p>
+    </div>
+    <button class="addbtn" onclick="openModal()">+ تاسك جديدة</button>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b id="statOverdue">0</b><span>متأخرة</span></div>
+    <div class="stat"><b id="statSoon">0</b><span>قرب تخلص</span></div>
+    <div class="stat"><b id="statOk">0</b><span>قيد التنفيذ</span></div>
+    <div class="stat"><b id="statPaused">0</b><span>موقوفة مؤقتًا</span></div>
+    <div class="stat"><b id="statDone">0</b><span>متم تنفيذها</span></div>
+  </div>
+
+  <div class="filterbar">
+    <label>فلترة حسب المسؤول (تقدر تختار أكتر من اسم)</label>
+    <div id="filterChips" class="chips"></div>
+  </div>
+
+  <div class="board">
+    <div class="col overdue"><h2><span class="dot"></span>متأخرة</h2><div id="listOverdue"></div></div>
+    <div class="col soon"><h2><span class="dot"></span>قرب تخلص</h2><div id="listSoon"></div></div>
+    <div class="col ok"><h2><span class="dot"></span>قيد التنفيذ</h2><div id="listOk"></div></div>
+    <div class="col paused"><h2><span class="dot"></span>موقوفة مؤقتًا</h2><div id="listPaused"></div></div>
+  </div>
+
+  <div class="archive-toggle">
+    <button onclick="toggleArchive()" id="archBtn">عرض الأرشيف (المنفذة)</button>
+  </div>
+  <div id="archiveList"></div>
+
+  <div class="note">
+    التنبيهات هنا بتظهر جوه الداشبورد أول ما تفتحه (لون التاسكة بيتغير قبل الديدلاين وبعده). إرسال تنبيهات بالإيميل تلقائيًا محتاج ربط بريد الشركة (Gmail / Outlook) — لو حابب أضبطه قولّي عشان أوصّله.
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">تاسك جديدة</h3>
+    <div class="field"><label>اسم التاسك</label><input id="fTitle" placeholder="مثال: تسليم تقرير الأداء"></div>
+    <div class="field"><label>تفاصيل (اختياري)</label><textarea id="fDesc"></textarea></div>
+    <div class="field"><label>المسؤول عن التاسك</label><input id="fAssignee" placeholder="اسم الموظف"></div>
+    <div class="field"><label>الديدلاين</label><input id="fDeadline" type="date"></div>
+    <div class="field"><label>التنبيه قبل الديدلاين بكام يوم</label><input id="fReminder" type="number" min="0" value="2"></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">إلغاء</button>
+      <button class="save" onclick="saveTask()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let db = null;
+let tasks = [];
+let editId = null;
+
+function todayISO(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+
+function statusOf(t){
+  if(t.status==='archived') return 'archived';
+  if(t.status==='paused') return 'paused';
+  const diff = daysBetween(todayISO(), t.deadline);
+  if(diff < 0) return 'overdue';
+  if(diff <= (t.reminderDays ?? 2)) return 'soon';
+  return 'ok';
+}
+
+let selectedAssignees = new Set();
+let filterNamesCache = [];
+
+function populateAssigneeFilter(){
+  const el = document.getElementById('filterChips');
+  const names = [...new Set(tasks.map(t => (t.assignee||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar'));
+  filterNamesCache = names;
+  selectedAssignees.forEach(n => { if(!names.includes(n)) selectedAssignees.delete(n); });
+  let html = names.map((n,i) => `<button type="button" class="chip ${selectedAssignees.has(n)?'active':''}" onclick="toggleAssigneeIdx(${i})">${escapeHtml(n)}</button>`).join('');
+  if(selectedAssignees.size>0) html += `<button type="button" class="chip clearall" onclick="clearAssigneeFilter()">مسح الفلتر ×</button>`;
+  el.innerHTML = html || '<span class="empty">هيظهر هنا لما تضيف تاسكات بمسؤولين</span>';
+}
+function toggleAssigneeIdx(i){
+  const name = filterNamesCache[i];
+  if(selectedAssignees.has(name)) selectedAssignees.delete(name); else selectedAssignees.add(name);
+  render();
+}
+function clearAssigneeFilter(){ selectedAssignees.clear(); render(); }
+
+function render(){
+  populateAssigneeFilter();
+  const visible = selectedAssignees.size>0 ? tasks.filter(t => selectedAssignees.has((t.assignee||'').trim())) : tasks;
+  const cols = {overdue:[], soon:[], ok:[], paused:[], archived:[]};
+  visible.forEach(t => cols[statusOf(t)].push(t));
+  ['overdue','soon','ok','paused'].forEach(k=>{
+    cols[k].sort((a,b)=> a.deadline.localeCompare(b.deadline));
+  });
+  cols.archived.sort((a,b)=> (b.doneAt||'').localeCompare(a.doneAt||''));
+
+  document.getElementById('statOverdue').textContent = cols.overdue.length;
+  document.getElementById('statSoon').textContent = cols.soon.length;
+  document.getElementById('statOk').textContent = cols.ok.length;
+  document.getElementById('statPaused').textContent = cols.paused.length;
+  document.getElementById('statDone').textContent = cols.archived.length;
+
+  renderList('listOverdue', cols.overdue, 'overdue');
+  renderList('listSoon', cols.soon, 'soon');
+  renderList('listOk', cols.ok, 'ok');
+  renderList('listPaused', cols.paused, 'paused');
+  renderList('archiveList', cols.archived, 'archived', true);
+}
+
+function badgeText(t, cls){
+  if(cls==='archived') return 'تم';
+  if(cls==='paused') return 'متوقفة';
+  const diff = daysBetween(todayISO(), t.deadline);
+  if(diff < 0) return `متأخرة ${Math.abs(diff)} يوم`;
+  if(diff === 0) return 'الديدلاين النهاردة';
+  return `باقي ${diff} يوم`;
+}
+
+function renderList(elId, list, cls, grid){
+  const el = document.getElementById(elId);
+  el.className = grid ? '' : el.className;
+  if(list.length===0){ el.innerHTML = `<div class="empty">مفيش تاسكات هنا حاليًا</div>`; return; }
+  el.innerHTML = list.map(t => `
+    <div class="task ${cls}">
+      <p class="task-title">${escapeHtml(t.title)}</p>
+      ${t.desc ? `<p class="task-desc">${escapeHtml(t.desc)}</p>` : ''}
+      <div class="task-meta">
+        <span>${escapeHtml(t.assignee || 'غير محدد')} · ${t.deadline}</span>
+        <span class="badge">${badgeText(t, cls)}</span>
+      </div>
+      ${cls==='archived' ? `
+      <div class="task-actions">
+        <button onclick="delTask('${t.id}')">حذف نهائي</button>
+      </div>` : cls==='paused' ? `
+      <div class="task-actions">
+        <button class="done" onclick="resumeTask('${t.id}')">استئناف</button>
+        <button onclick="editTask('${t.id}')">تعديل</button>
+        <button class="del" onclick="delTask('${t.id}')">حذف</button>
+      </div>` : `
+      <div class="task-actions">
+        <button class="done" onclick="markDone('${t.id}')">تم التنفيذ</button>
+        <button onclick="pauseTask('${t.id}')">إيقاف مؤقت</button>
+        <button onclick="editTask('${t.id}')">تعديل</button>
+        <button class="del" onclick="delTask('${t.id}')">حذف</button>
+      </div>`}
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function openModal(id){
+  editId = id || null;
+  document.getElementById('modalTitle').textContent = id ? 'تعديل التاسك' : 'تاسك جديدة';
+  if(id){
+    const t = tasks.find(x=>x.id===id);
+    fTitle.value=t.title; fDesc.value=t.desc||''; fAssignee.value=t.assignee||'';
+    fDeadline.value=t.deadline; fReminder.value=t.reminderDays ?? 2;
+  } else {
+    fTitle.value=''; fDesc.value=''; fAssignee.value=''; fDeadline.value=''; fReminder.value=2;
+  }
+  document.getElementById('modalBg').style.display='flex';
+}
+function closeModal(){ document.getElementById('modalBg').style.display='none'; }
+function editTask(id){ openModal(id); }
+
+async function saveTask(){
+  const title = fTitle.value.trim();
+  const deadline = fDeadline.value;
+  if(!title || !deadline){ alert('لازم اسم التاسك والديدلاين'); return; }
+  if(editId){
+    const t = tasks.find(x=>x.id===editId);
+    t.title=title; t.desc=fDesc.value.trim(); t.assignee=fAssignee.value.trim();
+    t.deadline=deadline; t.reminderDays=Number(fReminder.value)||0;
+  } else {
+    tasks.push({
+      id: 't'+Date.now()+Math.random().toString(36).slice(2,6),
+      title, desc:fDesc.value.trim(), assignee:fAssignee.value.trim(),
+      deadline, reminderDays:Number(fReminder.value)||0,
+      status:'active', createdAt: todayISO()
+    });
+  }
+  closeModal();
+  render();
+  await persist();
+}
+async function markDone(id){
+  const t = tasks.find(x=>x.id===id);
+  t.status='archived'; t.doneAt = todayISO();
+  render(); await persist();
+}
+async function pauseTask(id){
+  const t = tasks.find(x=>x.id===id);
+  t.status='paused';
+  render(); await persist();
+}
+async function resumeTask(id){
+  const t = tasks.find(x=>x.id===id);
+  t.status='active';
+  render(); await persist();
+}
+async function delTask(id){
+  tasks = tasks.filter(x=>x.id!==id);
+  render(); await persist();
+}
+function toggleArchive(){
+  const el = document.getElementById('archiveList');
+  const showing = el.style.display==='grid';
+  el.style.display = showing ? 'none' : 'grid';
+  document.getElementById('archBtn').textContent = showing ? 'عرض الأرشيف (المنفذة)' : 'إخفاء الأرشيف';
+}
+
+async function persist(){
+  if(db){
+    try{ await db.doc('tasks/board').set({ items: tasks, updatedAt: Date.now() }); return; }
+    catch(e){ console.error('save failed', e); }
+  }
+  try{ localStorage.setItem('hrTasksBoard', JSON.stringify(tasks)); }
+  catch(e){ console.error('local save failed', e); }
+}
+
+async function init(){
+  try{
+    db = await claude.use('db');
+  }catch(e){ db = null; }
+  if(db){
+    try{
+      const snap = await db.doc('tasks/board').get();
+      if(snap.exists && snap.data().items) tasks = snap.data().items;
+      db.doc('tasks/board').onSnapshot(snap => {
+        if(snap.exists && snap.data().items){ tasks = snap.data().items; render(); }
+      });
+    }catch(e){ /* first run, no doc yet */ }
+  } else {
+    try{
+      const raw = localStorage.getItem('hrTasksBoard');
+      if(raw) tasks = JSON.parse(raw);
+    }catch(e){ /* no local data yet */ }
+  }
+  render();
+}
+init();
+</script>
+</body>
+</html>
